@@ -1,6 +1,6 @@
 filename_h='170822_6dpf';
 f_tif = dir([filename_h '*.tif']);
-for j=16%1:length(f_tif)
+for j=11:length(f_tif)
     fname=f_tif(j).name;
     %% reading images from file
     info=imfinfo(fname);

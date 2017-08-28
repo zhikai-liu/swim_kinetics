@@ -1,11 +1,22 @@
 function [kinetics,swim_episodes]=manuv_para_calc(core,core_max_dist,numberOfImages,scale_pixels_mm,fps,fname)
 range=1:numberOfImages-12;
 core_anter=core-core_max_dist;
+
+% %% Design a low pass filter
+% nfilt=34;
+% Fst=25;
+% Fs=503;
+% d=designfilt('lowpassfir','FilterOrder',nfilt,'CutoffFrequency',Fst,'SampleRate',Fs);
+% %grpdelay(d,N,Fs);
+% delay = mean(grpdelay(d));
+% sm_core=[filter(d,core(:,1)),filter(d,core(:,2))];
+
 %% smoothing data
 sm_core=core;
 for i=1:5
 sm_core=[smooth(sm_core(:,1),3),smooth(sm_core(:,2),3)];
 end
+
 %% calculate the projection on anterior axis and lateral axis
 core_diff=diff(sm_core);
 dot_proj=core_diff(:,1).*core_anter(1:end-1,1)+core_diff(:,2).*core_anter(1:end-1,2);
@@ -37,20 +48,26 @@ kinetics.swim_later_accel=diff(kinetics.swim_later_vel).*fps;
 
 
 %% calculate the start of each swimming episode
-accel_thre=kinetics.swim_anter_accel-0.7;
+A_thre=0.5;
+V_thre=0.01;
+accel_thre=kinetics.swim_anter_accel-A_thre;
 crossing_ = accel_thre(1:end-1).*accel_thre(2:end)<0;
 start_index=find(crossing_.*(accel_thre(1:end-1)>0)); 
 gap_index=diff(start_index)>0.2*fps;
 gap_index=[1;gap_index];
 start_index=start_index(gap_index~=0 & start_index<numberOfImages-200 & start_index>51);
-swim_episodes=zeros(length(start_index),251);
-
+swim_episodes=[];
+for i=1:length(start_index)
+    if any(kinetics.swim_anter_vel(start_index(i):start_index(i)+50)>V_thre)
+        swim_episodes=[swim_episodes,kinetics.swim_anter_vel(start_index(i)-50:start_index(i)+199)];
+    end
+end
 %% plot figures
+%{
 figure;
 title([fname ' Swim Episodes overlay'])
 hold on;
 for i=1:length(start_index)
-    swim_episodes(i,:)=kinetics.swim_anter_vel(start_index(i)-50:start_index(i)+200);
     plot(swim_episodes(i,:))
 end
 % av_episode=mean(swim_episodes,1);
@@ -89,4 +106,5 @@ hold off;
 ylabel('accel, m/s^2')
 samexaxis('ytac','join','yld',1,'Box','off')
 title([fname ' kinetics'])
+%}
 end

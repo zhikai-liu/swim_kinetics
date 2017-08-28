@@ -14,10 +14,12 @@ function [Ed_image,BIM,area_ErIM,area_BIM,core,core_max_dist]=fish_tracking(imag
     Ed_image=logical(imageStack);
     for i = range
         %% binarize the image for each frame
-        BIM(:,:,i) = imbinarize(imageStack(:,:,i),'adaptive');
+        BIM(:,:,i) = imbinarize(imageStack(:,:,i),0.09);
+        SE=strel('disk',3);
+        BIM(:,:,i)=imclose(BIM(:,:,i),SE); %fill the gaps to obtain a continuous fish shape with a 2 pixels radius disk filter
         area_BIM(i)= sum(sum(BIM(:,:,i)));
         %% erode the image with the filter SE
-        SE =strel('disk',12); % erosion filter with 12 pixels radius disk, adjust it according to zoom factor
+        SE =strel('disk',20); % erosion filter with 14 pixels radius disk, adjust it according to zoom factor
         Ed_image(:,:,i) = imerode(BIM(:,:,i),SE);
         %% finding the centroids of continuous area in the eroded image and size of the areas
         S = regionprops(Ed_image(:,:,i),'Area','Centroid');
