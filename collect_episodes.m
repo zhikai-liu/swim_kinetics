@@ -10,15 +10,17 @@ d=designfilt('lowpassfir','FilterOrder',nfilt,'CutoffFrequency',Fst,'SampleRate'
 %grpdelay(d,N,Fs);
 delay = mean(grpdelay(d));
 
+%% reading swimming kinetics data from file
 for j=1:length(f_tif)
     fname=f_tif(j).name;
-    %% reading images info from file
     S=load(fname);
 %     for i=1:size(S.swim_episodes,2)
 %         swim_epi_all=[swim_epi_all,filter(d,S.swim_episodes(:,i))];
 %     end
     swim_epi_all=[swim_epi_all,S.swim_episodes];
 end
+
+%% average all the episodes and apply the low-pass filter, calculate velocity and acceleration
 av_vel=mean(swim_epi_all,2);
 g=9.8;
 fps=503;
@@ -27,6 +29,7 @@ lp_av_vel=filter(d,av_vel);
 lp_av_accel=diff(lp_av_vel)*fps;
 xt=[1:length(av_vel)-delay]/fps;
 
+%% plot the results
 figure;
 hold on;
 for i=1:size(swim_epi_all,2)
@@ -41,6 +44,8 @@ plot(xt(1:end-1),lp_av_accel(1+delay:end)/g,'r--','LineWidth',1);
 ylabel('m/s or g')
 xlabel('seconds')
 hold off;
+
+%% save results into mat and csv files
 T=table;
 T.accel=lp_av_accel;
 vel=lp_av_vel(1:end-1);
