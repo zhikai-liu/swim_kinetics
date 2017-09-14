@@ -30,25 +30,59 @@ lp_av_accel=diff(lp_av_vel)*fps;
 xt=[1:length(av_vel)-delay]/fps;
 
 %% plot the results
-figure;
+figure('Units','Normal',...
+    'Position',[0 0 1 1]);
+h(1).handle=subplot(2,1,1);
 hold on;
+vel_zoom=2;
 for i=1:size(swim_epi_all,2)
-plot(xt,swim_epi_all(1:end-delay,i), 'Color', [0.7 0.7 0.7])
+plot(xt,swim_epi_all(1:end-delay,i)*vel_zoom, 'Color', [0.7 0.7 0.7],'LineWidth',2)
 end
-plot(xt,av_vel(1:end-delay),'k','LineWidth',2)
-plot(xt,lp_av_vel(1+delay:end),'r--','LineWidth',2)
+plot(xt,av_vel(1:end-delay)*vel_zoom,'k','LineWidth',6)
+plot(xt,lp_av_vel(1+delay:end)*vel_zoom,'r','LineWidth',6)
 % plot(lp1_av,'k')
 % plot(lp2_av,'g')
-plot(xt(1:end-1),av_accel(1:end-delay)/g,'k','LineWidth',1)
-plot(xt(1:end-1),lp_av_accel(1+delay:end)/g,'r--','LineWidth',1);
+plot(xt(1:end-1),av_accel(1:end-delay)/g,'k:','LineWidth',6)
+plot(xt(1:end-1),lp_av_accel(1+delay:end)/g,'r:','LineWidth',6);
+xlim([xt(1) xt(end)])
+ylim([-0.05 0.1])
 ylabel('m/s or g')
 xlabel('seconds')
 hold off;
+h(2).handle=subplot(2,1,2);
+plot([0;0], [0;1],'-k',[0;1], [0;0],'-k','LineWidth',4);
+hold on;
+plot([0.2;0.6], [1;1],'-k',[0.2;0.6], [0.7;0.7],'k:','LineWidth',4);
+hold off;
+xlim([0 1]);
+ylim([0 1]);
+%%Set axis into appropriate parameters for printing
+XLIM=xt(end)-xt(1);
+YLIM=0.1+0.05;
+g_x_l=0.4;
+g_y_l=0.8;
+g_y_scale=0.02;
+x_scale=0.05;
+scale_x_l=g_x_l/XLIM*x_scale;
+scale_y_l=g_y_l/YLIM*g_y_scale;
+set(h(1).handle,'Units','normal',...
+                     'position',[0.3,0.1,g_x_l,g_y_l],...
+                     'Visible','off')
+set(h(2).handle,'Units','normal',...
+                     'position',[0.7,0.1,scale_x_l,scale_y_l],...
+                     'Visible','off')
+text(0.65,1,[num2str(g_y_scale/vel_zoom) 'm/s'],'fontsize',20,'fontweight','bold')
+%             g_scale=round(2*1.5*Stim_amp/YAxis_h(2)*0.06,2);
+text(0.65,0.7,[num2str(g_y_scale) 'g'],'fontsize',20,'fontweight','bold')
+%             x_scale=round(S_period_sec/XAxis_l(1)*0.035,2);
+text(1.1,0,[num2str(x_scale*1000) 'ms'],'fontsize',20,'fontweight','bold')
 
-%% save results into mat and csv files
-T=table;
-T.accel=lp_av_accel;
-vel=lp_av_vel(1:end-1);
-T.vel=vel;
-writetable(T,'average_kinetics.csv');
-save('average_kinetics.mat','vel','lp_av_accel');
+print('Swim_kinetics_plus_lowpass.jpg','-r300','-djpeg')
+
+% %% save results into mat and csv files
+% T=table;
+% T.accel=lp_av_accel;
+% vel=lp_av_vel(1:end-1);
+% T.vel=vel;
+% writetable(T,'average_kinetics.csv');
+% save('average_kinetics.mat','vel','lp_av_accel');
