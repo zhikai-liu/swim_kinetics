@@ -29,6 +29,35 @@ lp_av_vel=filter(d,av_vel);
 lp_av_accel=diff(lp_av_vel)*fps;
 xt=[1:length(av_vel)-delay]/fps;
 
+%% fourier frequency analysis for av_accel
+Y_av_accel=fft(av_accel);
+Y_lp_av_accel=fft(lp_av_accel);
+L=length(Y_av_accel);
+P2_nlp=abs(Y_av_accel/L);
+P1_nlp = P2_nlp(1:L/2+1);
+P1_nlp(2:end-1) = 2*P1_nlp(2:end-1);
+P2_lp=abs(Y_lp_av_accel/L);
+P1_lp = P2_lp(1:L/2+1);
+P1_lp(2:end-1) = 2*P1_lp(2:end-1);
+f = Fs*(0:(L/2))/L;
+figure('Units','Normal',...
+    'Position',[0.3 0 0.4 0.7]);
+hold on;
+plot(f,P1_nlp,'LineWidth',3,'Color','k') 
+plot(f,P1_lp,'LineWidth',3,'Color','r')
+% plot([8 8],[0 0.1],'k:','LineWidth',3)
+% text(7,-0.0028,'8','FontSize',20,'FontWeight','bold','LineWidth',3,'Color','k')
+title('Fast Fourier Transform Spectrum of Acceleration','FontSize',20,'FontWeight','bold')
+xlim([0 80])
+xticks(0:10:80)
+xlabel('Hz')
+ylabel('|P1(f)|')
+A=gca;
+set(A,'box','off')
+set(A.XAxis,'FontSize',20,'FontWeight','bold','LineWidth',3,'Color','k');
+set(A.YAxis,'FontSize',20,'FontWeight','bold','LineWidth',3,'Color','k');
+print('swim_frequency_spectrum.svg','-dsvg');
+
 %% plot the results
 figure('Units','Normal',...
     'Position',[0 0 1 1]);
@@ -77,7 +106,7 @@ text(0.65,0.7,[num2str(g_y_scale) 'g'],'fontsize',20,'fontweight','bold')
 %             x_scale=round(S_period_sec/XAxis_l(1)*0.035,2);
 text(1.1,0,[num2str(x_scale*1000) 'ms'],'fontsize',20,'fontweight','bold')
 
-print('Swim_kinetics_plus_lowpass.jpg','-r300','-djpeg')
+print('Swim_kinetics_plus_lowpass','-dsvg')
 
 % %% save results into mat and csv files
 % T=table;
